@@ -1,0 +1,377 @@
+import { useState, useEffect } from "react";
+
+const WEEK = [
+  {
+    day: "Sun",
+    label: "Rest",
+    tag: "",
+    color: "#444",
+    rest: true,
+    exercises: [],
+  },
+  {
+    day: "Mon",
+    label: "Legs A",
+    tag: "Quads · Hamstrings · Calves",
+    color: "#43B89C",
+    exercises: [
+      { name: "Barbell Squat", sets: 4, reps: "5–6", muscle: "Quads" },
+      { name: "Leg Press", sets: 3, reps: "10–12", muscle: "Quads/Glutes" },
+      { name: "Romanian Deadlift", sets: 3, reps: "8–10", muscle: "Hamstrings" },
+      { name: "Leg Curl", sets: 3, reps: "10–12", muscle: "Hamstrings" },
+      { name: "Leg Extension", sets: 3, reps: "12–15", muscle: "Quads" },
+      { name: "Calf Raises", sets: 4, reps: "15", muscle: "Calves" },
+    ],
+  },
+  {
+    day: "Tue",
+    label: "Push B",
+    tag: "Chest · Shoulders · Triceps",
+    color: "#F4A261",
+    exercises: [
+      { name: "Incline Barbell Press", sets: 4, reps: "6–8", muscle: "Upper Chest" },
+      { name: "Dumbbell Flat Press", sets: 3, reps: "8–10", muscle: "Chest" },
+      { name: "Arnold Press", sets: 3, reps: "8–10", muscle: "Shoulders" },
+      { name: "Cable Lateral Raises", sets: 3, reps: "12–15", muscle: "Side Delts" },
+      { name: "Dips (weighted)", sets: 3, reps: "8–10", muscle: "Triceps/Chest" },
+      { name: "Skull Crushers", sets: 3, reps: "10–12", muscle: "Triceps" },
+    ],
+  },
+  {
+    day: "Wed",
+    label: "Pull B",
+    tag: "Back · Biceps · Rear Delts",
+    color: "#E76F51",
+    exercises: [
+      { name: "Cable Row", sets: 4, reps: "8–10", muscle: "Mid Back" },
+      { name: "Lat Pulldown", sets: 4, reps: "8–10", muscle: "Lats" },
+      { name: "Single-Arm DB Row", sets: 3, reps: "10–12 each", muscle: "Back" },
+      { name: "Reverse Pec Deck", sets: 3, reps: "12–15", muscle: "Rear Delts" },
+      { name: "Incline Dumbbell Curl", sets: 3, reps: "10–12", muscle: "Biceps" },
+      { name: "Cable Curl", sets: 3, reps: "12–15", muscle: "Biceps" },
+    ],
+  },
+  {
+    day: "Thu",
+    label: "Legs B",
+    tag: "Posterior Chain · Glutes · Calves",
+    color: "#9B59B6",
+    exercises: [
+      { name: "Romanian Deadlift", sets: 4, reps: "6–8", muscle: "Hamstrings/Glutes" },
+      { name: "Bulgarian Split Squat", sets: 3, reps: "8–10 each", muscle: "Quads/Glutes" },
+      { name: "Hack Squat or Leg Press", sets: 3, reps: "10–12", muscle: "Quads" },
+      { name: "Leg Curl", sets: 3, reps: "10–12", muscle: "Hamstrings" },
+      { name: "Hip Thrust", sets: 3, reps: "10–12", muscle: "Glutes" },
+      { name: "Calf Raises", sets: 4, reps: "15", muscle: "Calves" },
+    ],
+  },
+  {
+    day: "Fri",
+    label: "Pull A",
+    tag: "Back · Biceps · Rear Delts",
+    color: "#FF6584",
+    today: true,
+    exercises: [
+      { name: "Deadlift", sets: 4, reps: "4–5", muscle: "Full Posterior" },
+      { name: "Pull-Ups (weighted)", sets: 4, reps: "6–8", muscle: "Lats" },
+      { name: "Barbell Row", sets: 3, reps: "6–8", muscle: "Mid Back" },
+      { name: "Face Pulls", sets: 3, reps: "15", muscle: "Rear Delts" },
+      { name: "Barbell Curl", sets: 3, reps: "8–10", muscle: "Biceps" },
+      { name: "Hammer Curl", sets: 3, reps: "10–12", muscle: "Brachialis" },
+    ],
+  },
+  {
+    day: "Sat",
+    label: "Push A",
+    tag: "Chest · Shoulders · Triceps",
+    color: "#6C63FF",
+    completed: true,
+    exercises: [
+      { name: "Barbell Bench Press", sets: 4, reps: "5–6", muscle: "Chest" },
+      { name: "Incline Dumbbell Press", sets: 3, reps: "8–10", muscle: "Upper Chest" },
+      { name: "Overhead Press", sets: 4, reps: "6–8", muscle: "Shoulders" },
+      { name: "Lateral Raises", sets: 3, reps: "12–15", muscle: "Side Delts" },
+      { name: "Tricep Pushdowns", sets: 3, reps: "10–12", muscle: "Triceps" },
+      { name: "Overhead Tricep Extension", sets: 3, reps: "10–12", muscle: "Triceps" },
+    ],
+  },
+];
+
+const STORAGE_KEY = "ppl_checked_v1";
+const DONE_KEY = "ppl_days_done_v1";
+
+const meals = [
+  { time: "Breakfast", icon: "🌅", items: ["4 eggs + 2 egg whites", "2 slices whole wheat toast", "1 cup oats + banana"], protein: 42, carbs: 85, fats: 18, cals: 670 },
+  { time: "Lunch", icon: "☀️", items: ["6 oz chicken breast", "1.5 cups white rice", "Veggies + olive oil"], protein: 48, carbs: 72, fats: 12, cals: 580 },
+  { time: "Pre-Workout", icon: "⚡", items: ["Greek yogurt", "Fruit", "Handful of almonds"], protein: 18, carbs: 38, fats: 14, cals: 340 },
+  { time: "Post-Workout", icon: "💪", items: ["Protein shake (35g protein)", "Rice cakes or fruit"], protein: 35, carbs: 30, fats: 3, cals: 285 },
+  { time: "Dinner", icon: "🌙", items: ["6 oz salmon", "Sweet potato", "Large salad + olive oil"], protein: 42, carbs: 55, fats: 18, cals: 550 },
+  { time: "Before Bed", icon: "😴", items: ["Cottage cheese or casein shake"], protein: 28, carbs: 10, fats: 4, cals: 185 },
+];
+
+const totalProtein = meals.reduce((s, m) => s + m.protein, 0);
+const totalCarbs = meals.reduce((s, m) => s + m.carbs, 0);
+const totalFats = meals.reduce((s, m) => s + m.fats, 0);
+const totalCals = meals.reduce((s, m) => s + m.cals, 0);
+
+export default function App() {
+  const todayIdx = WEEK.findIndex(d => d.today);
+  const [tab, setTab] = useState("workout");
+  const [activeDay, setActiveDay] = useState(todayIdx);
+  const [activeMeal, setActiveMeal] = useState(null);
+
+  // Persist checked exercises
+  const [checked, setChecked] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+  });
+
+  // Persist which days are marked done
+  const [doneDays, setDoneDays] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(DONE_KEY)) || {};
+      // Pre-mark Saturday as done
+      return { 6: true, ...saved };
+    } catch { return { 6: true }; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch {}
+  }, [checked]);
+
+  useEffect(() => {
+    try { localStorage.setItem(DONE_KEY, JSON.stringify(doneDays)); } catch {}
+  }, [doneDays]);
+
+  const toggleCheck = (dayIdx, exIdx) => {
+    const key = `${dayIdx}-${exIdx}`;
+    setChecked(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleDone = (dayIdx) => {
+    setDoneDays(prev => ({ ...prev, [dayIdx]: !prev[dayIdx] }));
+  };
+
+  const currentDay = WEEK[activeDay];
+  const isDone = doneDays[activeDay];
+  const completedExercises = currentDay.exercises.filter((_, i) => checked[`${activeDay}-${i}`]).length;
+  const totalExercises = currentDay.exercises.length;
+  const allChecked = totalExercises > 0 && completedExercises === totalExercises;
+
+  const doneCount = WEEK.filter((d, i) => !d.rest && doneDays[i]).length;
+  const trainDays = WEEK.filter(d => !d.rest).length;
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: "#0D0D0F", color: "#F0EEF6",
+      fontFamily: "'Inter', system-ui, sans-serif", maxWidth: 480, margin: "0 auto", paddingBottom: 80,
+    }}>
+      {/* Header */}
+      <div style={{ padding: "24px 20px 14px", borderBottom: "1px solid #1E1E26" }}>
+        <div style={{ fontSize: 11, color: "#6C63FF", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
+          Weekly Tracker · PPL × 2
+        </div>
+        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5 }}>Lean Bulk Program</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
+          <div style={{ flex: 1, height: 4, background: "#1A1A22", borderRadius: 2, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${(doneCount / trainDays) * 100}%`, background: "linear-gradient(90deg, #6C63FF, #FF6584)", borderRadius: 2, transition: "width 0.4s" }} />
+          </div>
+          <div style={{ fontSize: 12, color: "#555", flexShrink: 0 }}>{doneCount}/{trainDays} sessions</div>
+        </div>
+      </div>
+
+      {/* Tab Bar */}
+      <div style={{ display: "flex", borderBottom: "1px solid #1E1E26", background: "#0D0D0F", position: "sticky", top: 0, zIndex: 10 }}>
+        {[{ id: "workout", label: "Workout" }, { id: "nutrition", label: "Nutrition" }].map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            flex: 1, padding: "14px 0", background: "none", border: "none",
+            borderBottom: tab === t.id ? "2px solid #6C63FF" : "2px solid transparent",
+            color: tab === t.id ? "#F0EEF6" : "#555",
+            fontWeight: tab === t.id ? 600 : 400, fontSize: 13, cursor: "pointer",
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      <div style={{ padding: "16px" }}>
+
+        {tab === "workout" && (
+          <div>
+            {/* Week strip */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+              {WEEK.map((d, i) => {
+                const isActive = activeDay === i;
+                const isToday = d.today;
+                const done = doneDays[i];
+                return (
+                  <div key={i} onClick={() => setActiveDay(i)} style={{
+                    flex: 1, borderRadius: 12, padding: "10px 4px", textAlign: "center", cursor: "pointer",
+                    background: isActive ? d.color : done ? "#1A1A22" : "#13131A",
+                    border: `1px solid ${isActive ? d.color : isToday && !isActive ? d.color + "66" : "#1E1E26"}`,
+                    transition: "all 0.15s",
+                  }}>
+                    <div style={{ fontSize: 10, color: isActive ? "#fff" : isToday ? d.color : "#555", fontWeight: isToday ? 700 : 400, marginBottom: 4 }}>
+                      {d.day}
+                    </div>
+                    <div style={{ fontSize: 16 }}>
+                      {d.rest ? "🌿" : done ? "✅" : isToday ? "●" : "○"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Day card */}
+            <div style={{
+              background: `linear-gradient(135deg, ${currentDay.color}22, ${currentDay.color}08)`,
+              border: `1px solid ${currentDay.color}33`, borderRadius: 16, padding: "16px 16px 14px",
+              marginBottom: 14,
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: 11, color: currentDay.color, letterSpacing: 1, textTransform: "uppercase" }}>
+                    {currentDay.day}{currentDay.today ? " · Today" : ""}
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 700, marginTop: 2 }}>{currentDay.label}</div>
+                  {currentDay.tag && <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{currentDay.tag}</div>}
+                </div>
+                {!currentDay.rest && (
+                  <button onClick={() => toggleDone(activeDay)} style={{
+                    padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer",
+                    background: isDone ? currentDay.color : "#1A1A22",
+                    color: isDone ? "#fff" : "#666", fontSize: 12, fontWeight: 600, transition: "all 0.2s",
+                  }}>
+                    {isDone ? "✓ Done" : "Mark Done"}
+                  </button>
+                )}
+              </div>
+              {!currentDay.rest && (
+                <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ flex: 1, height: 4, background: "#00000033", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${totalExercises ? (completedExercises / totalExercises) * 100 : 0}%`, background: currentDay.color, borderRadius: 2, transition: "width 0.3s" }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: "#ffffff88", flexShrink: 0 }}>{completedExercises}/{totalExercises}</div>
+                </div>
+              )}
+            </div>
+
+            {currentDay.rest ? (
+              <div style={{ background: "#13131A", borderRadius: 16, padding: 24, textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 10 }}>🌿</div>
+                <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Rest Day</div>
+                <div style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}>Walk, stretch, mobility work. Muscle is built during recovery — protect this day.</div>
+              </div>
+            ) : (
+              <div>
+                {currentDay.exercises.map((ex, i) => {
+                  const done = checked[`${activeDay}-${i}`];
+                  return (
+                    <div key={i} onClick={() => toggleCheck(activeDay, i)} style={{
+                      background: done ? `${currentDay.color}18` : "#13131A",
+                      border: `1px solid ${done ? currentDay.color + "55" : "#1E1E26"}`,
+                      borderRadius: 14, padding: "13px 16px", marginBottom: 8,
+                      display: "flex", alignItems: "center", gap: 14, cursor: "pointer", transition: "all 0.15s",
+                    }}>
+                      <div style={{
+                        width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                        border: `2px solid ${done ? currentDay.color : "#333"}`,
+                        background: done ? currentDay.color : "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
+                      }}>
+                        {done && <span style={{ fontSize: 11, color: "#fff" }}>✓</span>}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: done ? "#666" : "#F0EEF6", textDecoration: done ? "line-through" : "none" }}>{ex.name}</div>
+                        <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>{ex.muscle}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: currentDay.color }}>{ex.sets}×{ex.reps}</div>
+                        <div style={{ fontSize: 10, color: "#444" }}>sets×reps</div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {allChecked && !isDone && (
+                  <div onClick={() => toggleDone(activeDay)} style={{
+                    textAlign: "center", padding: "16px", background: `${currentDay.color}18`,
+                    borderRadius: 14, marginTop: 4, fontSize: 14, color: currentDay.color,
+                    fontWeight: 600, cursor: "pointer", border: `1px dashed ${currentDay.color}44`,
+                  }}>
+                    🔥 All done — tap to mark session complete
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === "nutrition" && (
+          <div>
+            <div style={{ background: "#13131A", borderRadius: 16, padding: "18px 16px", marginBottom: 20 }}>
+              <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Daily Targets</div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                {[
+                  { label: "Calories", val: totalCals, color: "#F0EEF6" },
+                  { label: "Protein", val: `${totalProtein}g`, color: "#6C63FF" },
+                  { label: "Carbs", val: `${totalCarbs}g`, color: "#F4A261" },
+                  { label: "Fats", val: `${totalFats}g`, color: "#43B89C" },
+                ].map(m => (
+                  <div key={m.label} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: m.color }}>{m.val}</div>
+                    <div style={{ fontSize: 10, color: "#555", marginTop: 2 }}>{m.label}</div>
+                  </div>
+                ))}
+              </div>
+              {[
+                { label: "Protein", val: totalProtein, target: 165, color: "#6C63FF" },
+                { label: "Carbs", val: totalCarbs, target: 320, color: "#F4A261" },
+                { label: "Fats", val: totalFats, target: 75, color: "#43B89C" },
+              ].map(m => (
+                <div key={m.label} style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#555", marginBottom: 4 }}>
+                    <span>{m.label}</span><span>{m.val}g / {m.target}g</span>
+                  </div>
+                  <div style={{ height: 6, background: "#222", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${Math.min((m.val / m.target) * 100, 100)}%`, background: m.color, borderRadius: 3 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, color: "#555", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Meal Plan</div>
+            {meals.map((meal, i) => (
+              <div key={i} onClick={() => setActiveMeal(activeMeal === i ? null : i)} style={{
+                background: "#13131A", borderRadius: 14, marginBottom: 8, overflow: "hidden", border: "1px solid #1E1E26", cursor: "pointer",
+              }}>
+                <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 20 }}>{meal.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{meal.time}</div>
+                    <div style={{ fontSize: 11, color: "#555", marginTop: 1 }}>{meal.cals} kcal · {meal.protein}g protein</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#444", transform: activeMeal === i ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>▼</div>
+                </div>
+                {activeMeal === i && (
+                  <div style={{ borderTop: "1px solid #1E1E26", padding: "12px 16px" }}>
+                    {meal.items.map((item, j) => (
+                      <div key={j} style={{ fontSize: 13, color: "#aaa", padding: "4px 0", borderBottom: j < meal.items.length - 1 ? "1px solid #1A1A22" : "none" }}>· {item}</div>
+                    ))}
+                    <div style={{ display: "flex", gap: 16, marginTop: 12, padding: "10px 0 0", borderTop: "1px solid #1A1A22" }}>
+                      {[
+                        { label: "Protein", val: meal.protein + "g", color: "#6C63FF" },
+                        { label: "Carbs", val: meal.carbs + "g", color: "#F4A261" },
+                        { label: "Fats", val: meal.fats + "g", color: "#43B89C" },
+                      ].map(m => (
+                        <div key={m.label}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: m.color }}>{m.val}</div>
+                          <div style={{ fontSize: 10, color: "#555" }}>{m.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
