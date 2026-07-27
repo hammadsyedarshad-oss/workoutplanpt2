@@ -1,19 +1,28 @@
-import { useState, useEffect } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Workout Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0D0D0F; color: #F0EEF6; font-family: 'Inter', system-ui, sans-serif; }
+  #root { max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 80px; }
+  button { font-family: inherit; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
 
 const WEEK = [
+  { day: "Sun", label: "Rest", tag: "", color: "#444", rest: true, exercises: [] },
   {
-    day: "Sun",
-    label: "Rest",
-    tag: "",
-    color: "#444",
-    rest: true,
-    exercises: [],
-  },
-  {
-    day: "Mon",
-    label: "Legs A",
-    tag: "Quads · Hamstrings · Calves",
-    color: "#43B89C",
+    day: "Mon", label: "Legs A", tag: "Quads · Hamstrings · Calves", color: "#43B89C",
     exercises: [
       { name: "Barbell Squat", sets: 4, reps: "5–6", muscle: "Quads" },
       { name: "Leg Press", sets: 3, reps: "10–12", muscle: "Quads/Glutes" },
@@ -24,10 +33,7 @@ const WEEK = [
     ],
   },
   {
-    day: "Tue",
-    label: "Push B",
-    tag: "Chest · Shoulders · Triceps",
-    color: "#F4A261",
+    day: "Tue", label: "Push B", tag: "Chest · Shoulders · Triceps", color: "#F4A261",
     exercises: [
       { name: "Incline Barbell Press", sets: 4, reps: "6–8", muscle: "Upper Chest" },
       { name: "Dumbbell Flat Press", sets: 3, reps: "8–10", muscle: "Chest" },
@@ -38,10 +44,7 @@ const WEEK = [
     ],
   },
   {
-    day: "Wed",
-    label: "Pull B",
-    tag: "Back · Biceps · Rear Delts",
-    color: "#E76F51",
+    day: "Wed", label: "Pull B", tag: "Back · Biceps · Rear Delts", color: "#E76F51",
     exercises: [
       { name: "Cable Row", sets: 4, reps: "8–10", muscle: "Mid Back" },
       { name: "Lat Pulldown", sets: 4, reps: "8–10", muscle: "Lats" },
@@ -52,10 +55,7 @@ const WEEK = [
     ],
   },
   {
-    day: "Thu",
-    label: "Legs B",
-    tag: "Posterior Chain · Glutes · Calves",
-    color: "#9B59B6",
+    day: "Thu", label: "Legs B", tag: "Posterior Chain · Glutes · Calves", color: "#9B59B6",
     exercises: [
       { name: "Romanian Deadlift", sets: 4, reps: "6–8", muscle: "Hamstrings/Glutes" },
       { name: "Bulgarian Split Squat", sets: 3, reps: "8–10 each", muscle: "Quads/Glutes" },
@@ -66,26 +66,18 @@ const WEEK = [
     ],
   },
   {
-    day: "Fri",
-    label: "Pull A",
-    tag: "Back · Biceps · Rear Delts",
-    color: "#FF6584",
-    today: true,
+    day: "Fri", label: "Pull A", tag: "Back · Biceps · Rear Delts", color: "#FF6584", today: true,
     exercises: [
-      { name: "Deadlift", sets: 4, reps: "4–5", muscle: "Full Posterior" },
+      { name: "DB Romanian Deadlift", sets: 4, reps: "6–8", muscle: "Full Posterior" },
       { name: "Pull-Ups (weighted)", sets: 4, reps: "6–8", muscle: "Lats" },
-      { name: "Barbell Row", sets: 3, reps: "6–8", muscle: "Mid Back" },
+      { name: "DB Bent Over Row", sets: 3, reps: "8–10 each", muscle: "Mid Back" },
       { name: "Face Pulls", sets: 3, reps: "15", muscle: "Rear Delts" },
-      { name: "Barbell Curl", sets: 3, reps: "8–10", muscle: "Biceps" },
+      { name: "Dumbbell Curl", sets: 3, reps: "8–10", muscle: "Biceps" },
       { name: "Hammer Curl", sets: 3, reps: "10–12", muscle: "Brachialis" },
     ],
   },
   {
-    day: "Sat",
-    label: "Push A",
-    tag: "Chest · Shoulders · Triceps",
-    color: "#6C63FF",
-    completed: true,
+    day: "Sat", label: "Push A", tag: "Chest · Shoulders · Triceps", color: "#6C63FF", completed: true,
     exercises: [
       { name: "Barbell Bench Press", sets: 4, reps: "5–6", muscle: "Chest" },
       { name: "Incline Dumbbell Press", sets: 3, reps: "8–10", muscle: "Upper Chest" },
@@ -96,9 +88,6 @@ const WEEK = [
     ],
   },
 ];
-
-const STORAGE_KEY = "ppl_checked_v1";
-const DONE_KEY = "ppl_days_done_v1";
 
 const meals = [
   { time: "Breakfast", icon: "🌅", items: ["4 eggs + 2 egg whites", "2 slices whole wheat toast", "1 cup oats + banana"], protein: 42, carbs: 85, fats: 18, cals: 670 },
@@ -114,30 +103,25 @@ const totalCarbs = meals.reduce((s, m) => s + m.carbs, 0);
 const totalFats = meals.reduce((s, m) => s + m.fats, 0);
 const totalCals = meals.reduce((s, m) => s + m.cals, 0);
 
-export default function App() {
+const STORAGE_KEY = "ppl_checked_v1";
+const DONE_KEY = "ppl_days_done_v1";
+
+function App() {
   const todayIdx = WEEK.findIndex(d => d.today);
   const [tab, setTab] = useState("workout");
   const [activeDay, setActiveDay] = useState(todayIdx);
   const [activeMeal, setActiveMeal] = useState(null);
 
-  // Persist checked exercises
   const [checked, setChecked] = useState(() => {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
   });
-
-  // Persist which days are marked done
   const [doneDays, setDoneDays] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(DONE_KEY)) || {};
-      // Pre-mark Saturday as done
-      return { 6: true, ...saved };
-    } catch { return { 6: true }; }
+    try { return { 6: true, ...JSON.parse(localStorage.getItem(DONE_KEY)) }; } catch { return { 6: true }; }
   });
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(checked)); } catch {}
   }, [checked]);
-
   useEffect(() => {
     try { localStorage.setItem(DONE_KEY, JSON.stringify(doneDays)); } catch {}
   }, [doneDays]);
@@ -146,30 +130,21 @@ export default function App() {
     const key = `${dayIdx}-${exIdx}`;
     setChecked(prev => ({ ...prev, [key]: !prev[key] }));
   };
-
-  const toggleDone = (dayIdx) => {
-    setDoneDays(prev => ({ ...prev, [dayIdx]: !prev[dayIdx] }));
-  };
+  const toggleDone = (dayIdx) => setDoneDays(prev => ({ ...prev, [dayIdx]: !prev[dayIdx] }));
 
   const currentDay = WEEK[activeDay];
   const isDone = doneDays[activeDay];
   const completedExercises = currentDay.exercises.filter((_, i) => checked[`${activeDay}-${i}`]).length;
   const totalExercises = currentDay.exercises.length;
   const allChecked = totalExercises > 0 && completedExercises === totalExercises;
-
   const doneCount = WEEK.filter((d, i) => !d.rest && doneDays[i]).length;
   const trainDays = WEEK.filter(d => !d.rest).length;
 
   return (
-    <div style={{
-      minHeight: "100vh", background: "#0D0D0F", color: "#F0EEF6",
-      fontFamily: "'Inter', system-ui, sans-serif", maxWidth: 480, margin: "0 auto", paddingBottom: 80,
-    }}>
+    <div>
       {/* Header */}
       <div style={{ padding: "24px 20px 14px", borderBottom: "1px solid #1E1E26" }}>
-        <div style={{ fontSize: 11, color: "#6C63FF", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>
-          Weekly Tracker · PPL × 2
-        </div>
+        <div style={{ fontSize: 11, color: "#6C63FF", letterSpacing: 2, textTransform: "uppercase", marginBottom: 4 }}>Weekly Tracker · PPL × 2</div>
         <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5 }}>Lean Bulk Program</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
           <div style={{ flex: 1, height: 4, background: "#1A1A22", borderRadius: 2, overflow: "hidden" }}>
@@ -179,7 +154,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Tab Bar */}
+      {/* Tabs */}
       <div style={{ display: "flex", borderBottom: "1px solid #1E1E26", background: "#0D0D0F", position: "sticky", top: 0, zIndex: 10 }}>
         {[{ id: "workout", label: "Workout" }, { id: "nutrition", label: "Nutrition" }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
@@ -192,28 +167,22 @@ export default function App() {
       </div>
 
       <div style={{ padding: "16px" }}>
-
         {tab === "workout" && (
           <div>
             {/* Week strip */}
             <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
               {WEEK.map((d, i) => {
                 const isActive = activeDay === i;
-                const isToday = d.today;
                 const done = doneDays[i];
                 return (
                   <div key={i} onClick={() => setActiveDay(i)} style={{
                     flex: 1, borderRadius: 12, padding: "10px 4px", textAlign: "center", cursor: "pointer",
                     background: isActive ? d.color : done ? "#1A1A22" : "#13131A",
-                    border: `1px solid ${isActive ? d.color : isToday && !isActive ? d.color + "66" : "#1E1E26"}`,
+                    border: `1px solid ${isActive ? d.color : d.today && !isActive ? d.color + "66" : "#1E1E26"}`,
                     transition: "all 0.15s",
                   }}>
-                    <div style={{ fontSize: 10, color: isActive ? "#fff" : isToday ? d.color : "#555", fontWeight: isToday ? 700 : 400, marginBottom: 4 }}>
-                      {d.day}
-                    </div>
-                    <div style={{ fontSize: 16 }}>
-                      {d.rest ? "🌿" : done ? "✅" : isToday ? "●" : "○"}
-                    </div>
+                    <div style={{ fontSize: 10, color: isActive ? "#fff" : d.today ? d.color : "#555", fontWeight: d.today ? 700 : 400, marginBottom: 4 }}>{d.day}</div>
+                    <div style={{ fontSize: 16 }}>{d.rest ? "🌿" : done ? "✅" : d.today ? "●" : "○"}</div>
                   </div>
                 );
               })}
@@ -222,8 +191,7 @@ export default function App() {
             {/* Day card */}
             <div style={{
               background: `linear-gradient(135deg, ${currentDay.color}22, ${currentDay.color}08)`,
-              border: `1px solid ${currentDay.color}33`, borderRadius: 16, padding: "16px 16px 14px",
-              marginBottom: 14,
+              border: `1px solid ${currentDay.color}33`, borderRadius: 16, padding: "16px", marginBottom: 14,
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
@@ -238,9 +206,7 @@ export default function App() {
                     padding: "6px 14px", borderRadius: 20, border: "none", cursor: "pointer",
                     background: isDone ? currentDay.color : "#1A1A22",
                     color: isDone ? "#fff" : "#666", fontSize: 12, fontWeight: 600, transition: "all 0.2s",
-                  }}>
-                    {isDone ? "✓ Done" : "Mark Done"}
-                  </button>
+                  }}>{isDone ? "✓ Done" : "Mark Done"}</button>
                 )}
               </div>
               {!currentDay.rest && (
@@ -257,7 +223,7 @@ export default function App() {
               <div style={{ background: "#13131A", borderRadius: 16, padding: 24, textAlign: "center" }}>
                 <div style={{ fontSize: 36, marginBottom: 10 }}>🌿</div>
                 <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>Rest Day</div>
-                <div style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}>Walk, stretch, mobility work. Muscle is built during recovery — protect this day.</div>
+                <div style={{ fontSize: 13, color: "#666", lineHeight: 1.6 }}>Walk, stretch, mobility work. Muscle is built during recovery.</div>
               </div>
             ) : (
               <div>
@@ -274,7 +240,7 @@ export default function App() {
                         width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
                         border: `2px solid ${done ? currentDay.color : "#333"}`,
                         background: done ? currentDay.color : "transparent",
-                        display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
+                        display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
                         {done && <span style={{ fontSize: 11, color: "#fff" }}>✓</span>}
                       </div>
@@ -294,9 +260,7 @@ export default function App() {
                     textAlign: "center", padding: "16px", background: `${currentDay.color}18`,
                     borderRadius: 14, marginTop: 4, fontSize: 14, color: currentDay.color,
                     fontWeight: 600, cursor: "pointer", border: `1px dashed ${currentDay.color}44`,
-                  }}>
-                    🔥 All done — tap to mark session complete
-                  </div>
+                  }}>🔥 All done — tap to mark session complete</div>
                 )}
               </div>
             )}
@@ -375,3 +339,8 @@ export default function App() {
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
